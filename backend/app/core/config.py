@@ -46,13 +46,13 @@ class Settings(BaseSettings):
         list[AnyUrl] | str, BeforeValidator(parse_cors)
     ] = []
 
-    PROJECT_NAME: str
+    PROJECT_NAME: str = "First_pro"
     SENTRY_DSN: HttpUrl | None = None
-    POSTGRES_SERVER: str
+    POSTGRES_SERVER: str = "http://localhost"
     POSTGRES_PORT: int = 5432
-    POSTGRES_USER: str
-    POSTGRES_PASSWORD: str
-    POSTGRES_DB: str = ""
+    POSTGRES_USER: str = "Ashish"
+    POSTGRES_PASSWORD: str = "Ashish@123"
+    POSTGRES_DB: str = "DB"
 
     @computed_field  # type: ignore[misc]
     @property
@@ -92,8 +92,8 @@ class Settings(BaseSettings):
     # TODO: update type to EmailStr when sqlmodel supports it
     EMAIL_TEST_USER: str = "test@example.com"
     # TODO: update type to EmailStr when sqlmodel supports it
-    FIRST_SUPERUSER: str
-    FIRST_SUPERUSER_PASSWORD: str
+    FIRST_SUPERUSER: str = "Ashish"
+    FIRST_SUPERUSER_PASSWORD: str = "Ashish@123"
     USERS_OPEN_REGISTRATION: bool = False
 
     def _check_default_secret(self, var_name: str, value: str | None) -> None:

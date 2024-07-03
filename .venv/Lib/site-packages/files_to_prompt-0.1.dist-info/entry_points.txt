@@ -1,0 +1,2 @@
+[console_scripts]
+files-to-prompt = files_to_prompt.cli:cli
