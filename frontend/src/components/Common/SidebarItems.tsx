@@ -1,10 +1,9 @@
 import { Box, Flex, Icon, Text, useColorModeValue } from "@chakra-ui/react"
+import { useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
-import type React from "react"
 import { FiBriefcase, FiHome, FiSettings, FiUsers } from "react-icons/fi"
-import { useQueryClient } from "react-query"
 
-import type { UserOut } from "../../client"
+import type { UserPublic } from "../../client"
 
 const items = [
   { icon: FiHome, title: "Dashboard", path: "/" },
@@ -16,23 +15,23 @@ interface SidebarItemsProps {
   onClose?: () => void
 }
 
-const SidebarItems: React.FC<SidebarItemsProps> = ({ onClose }) => {
+const SidebarItems = ({ onClose }: SidebarItemsProps) => {
   const queryClient = useQueryClient()
-  const textColor = useColorModeValue("ui.main", "ui.white")
+  const textColor = useColorModeValue("ui.main", "ui.light")
   const bgActive = useColorModeValue("#E2E8F0", "#4A5568")
-  const currentUser = queryClient.getQueryData<UserOut>("currentUser")
+  const currentUser = queryClient.getQueryData<UserPublic>(["currentUser"])
 
   const finalItems = currentUser?.is_superuser
     ? [...items, { icon: FiUsers, title: "Admin", path: "/admin" }]
     : items
 
-  const listItems = finalItems.map((item) => (
+  const listItems = finalItems.map(({ icon, title, path }) => (
     <Flex
       as={Link}
-      to={item.path}
+      to={path}
       w="100%"
       p={2}
-      key={item.title}
+      key={title}
       activeProps={{
         style: {
           background: bgActive,
@@ -42,8 +41,8 @@ const SidebarItems: React.FC<SidebarItemsProps> = ({ onClose }) => {
       color={textColor}
       onClick={onClose}
     >
-      <Icon as={item.icon} alignSelf="center" />
-      <Text ml={2}>{item.title}</Text>
+      <Icon as={icon} alignSelf="center" />
+      <Text ml={2}>{title}</Text>
     </Flex>
   ))
 

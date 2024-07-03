@@ -6,22 +6,21 @@ import {
   MenuList,
   useDisclosure,
 } from "@chakra-ui/react"
-import type React from "react"
 import { BsThreeDotsVertical } from "react-icons/bs"
 import { FiEdit, FiTrash } from "react-icons/fi"
 
-import type { ItemOut, UserOut } from "../../client"
+import type { ItemPublic, UserPublic } from "../../client"
 import EditUser from "../Admin/EditUser"
 import EditItem from "../Items/EditItem"
 import Delete from "./DeleteAlert"
 
 interface ActionsMenuProps {
   type: string
-  value: ItemOut | UserOut
+  value: ItemPublic | UserPublic
   disabled?: boolean
 }
 
-const ActionsMenu: React.FC<ActionsMenuProps> = ({ type, value, disabled }) => {
+const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
   const editUserModal = useDisclosure()
   const deleteModal = useDisclosure()
 
@@ -51,13 +50,13 @@ const ActionsMenu: React.FC<ActionsMenuProps> = ({ type, value, disabled }) => {
         </MenuList>
         {type === "User" ? (
           <EditUser
-            user={value as UserOut}
+            user={value as UserPublic}
             isOpen={editUserModal.isOpen}
             onClose={editUserModal.onClose}
           />
         ) : (
           <EditItem
-            item={value as ItemOut}
+            item={value as ItemPublic}
             isOpen={editUserModal.isOpen}
             onClose={editUserModal.onClose}
           />

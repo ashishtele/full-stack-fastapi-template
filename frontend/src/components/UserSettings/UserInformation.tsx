@@ -11,23 +11,23 @@ import {
   Text,
   useColorModeValue,
 } from "@chakra-ui/react"
-import type React from "react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { type SubmitHandler, useForm } from "react-hook-form"
-import { useMutation, useQueryClient } from "react-query"
 
 import {
   type ApiError,
-  type UserOut,
+  type UserPublic,
   type UserUpdateMe,
   UsersService,
 } from "../../client"
 import useAuth from "../../hooks/useAuth"
 import useCustomToast from "../../hooks/useCustomToast"
+import { emailPattern } from "../../utils"
 
-const UserInformation: React.FC = () => {
+const UserInformation = () => {
   const queryClient = useQueryClient()
-  const color = useColorModeValue("inherit", "ui.white")
+  const color = useColorModeValue("inherit", "ui.light")
   const showToast = useCustomToast()
   const [editMode, setEditMode] = useState(false)
   const { user: currentUser } = useAuth()
@@ -37,7 +37,7 @@ const UserInformation: React.FC = () => {
     reset,
     getValues,
     formState: { isSubmitting, errors, isDirty },
-  } = useForm<UserOut>({
+  } = useForm<UserPublic>({
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
@@ -50,21 +50,20 @@ const UserInformation: React.FC = () => {
     setEditMode(!editMode)
   }
 
-  const updateInfo = async (data: UserUpdateMe) => {
-    await UsersService.updateUserMe({ requestBody: data })
-  }
-
-  const mutation = useMutation(updateInfo, {
+  const mutation = useMutation({
+    mutationFn: (data: UserUpdateMe) =>
+      UsersService.updateUserMe({ requestBody: data }),
     onSuccess: () => {
       showToast("Success!", "User updated successfully.", "success")
     },
     onError: (err: ApiError) => {
-      const errDetail = err.body?.detail
+      const errDetail = (err.body as any)?.detail
       showToast("Something went wrong.", `${errDetail}`, "error")
     },
     onSettled: () => {
-      queryClient.invalidateQueries("users")
-      queryClient.invalidateQueries("currentUser")
+      // TODO: can we do just one call now?
+      queryClient.invalidateQueries({ queryKey: ["users"] })
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] })
     },
   })
 
@@ -79,11 +78,15 @@ const UserInformation: React.FC = () => {
 
   return (
     <>
-      <Container maxW="full" as="form" onSubmit={handleSubmit(onSubmit)}>
+      <Container maxW="full">
         <Heading size="sm" py={4}>
           User Information
         </Heading>
-        <Box w={{ sm: "full", md: "50%" }}>
+        <Box
+          w={{ sm: "full", md: "50%" }}
+          as="form"
+          onSubmit={handleSubmit(onSubmit)}
+        >
           <FormControl>
             <FormLabel color={color} htmlFor="name">
               Full name
@@ -99,7 +102,7 @@ const UserInformation: React.FC = () => {
               <Text
                 size="md"
                 py={2}
-                color={!currentUser?.full_name ? "gray.400" : "inherit"}
+                color={!currentUser?.full_name ? "ui.dim" : "inherit"}
               >
                 {currentUser?.full_name || "N/A"}
               </Text>
@@ -114,10 +117,7 @@ const UserInformation: React.FC = () => {
                 id="email"
                 {...register("email", {
                   required: "Email is required",
-                  pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i,
-                    message: "Invalid email address",
-                  },
+                  pattern: emailPattern,
                 })}
                 type="email"
                 size="md"

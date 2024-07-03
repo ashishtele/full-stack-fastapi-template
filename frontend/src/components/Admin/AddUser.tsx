@@ -14,13 +14,13 @@ import {
   ModalHeader,
   ModalOverlay,
 } from "@chakra-ui/react"
-import type React from "react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { type SubmitHandler, useForm } from "react-hook-form"
-import { useMutation, useQueryClient } from "react-query"
 
 import { type UserCreate, UsersService } from "../../client"
 import type { ApiError } from "../../client/core/ApiError"
 import useCustomToast from "../../hooks/useCustomToast"
+import { emailPattern } from "../../utils"
 
 interface AddUserProps {
   isOpen: boolean
@@ -31,7 +31,7 @@ interface UserCreateForm extends UserCreate {
   confirm_password: string
 }
 
-const AddUser: React.FC<AddUserProps> = ({ isOpen, onClose }) => {
+const AddUser = ({ isOpen, onClose }: AddUserProps) => {
   const queryClient = useQueryClient()
   const showToast = useCustomToast()
   const {
@@ -53,22 +53,20 @@ const AddUser: React.FC<AddUserProps> = ({ isOpen, onClose }) => {
     },
   })
 
-  const addUser = async (data: UserCreate) => {
-    await UsersService.createUser({ requestBody: data })
-  }
-
-  const mutation = useMutation(addUser, {
+  const mutation = useMutation({
+    mutationFn: (data: UserCreate) =>
+      UsersService.createUser({ requestBody: data }),
     onSuccess: () => {
       showToast("Success!", "User created successfully.", "success")
       reset()
       onClose()
     },
     onError: (err: ApiError) => {
-      const errDetail = err.body?.detail
+      const errDetail = (err.body as any)?.detail
       showToast("Something went wrong.", `${errDetail}`, "error")
     },
     onSettled: () => {
-      queryClient.invalidateQueries("users")
+      queryClient.invalidateQueries({ queryKey: ["users"] })
     },
   })
 
@@ -95,10 +93,7 @@ const AddUser: React.FC<AddUserProps> = ({ isOpen, onClose }) => {
                 id="email"
                 {...register("email", {
                   required: "Email is required",
-                  pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i,
-                    message: "Invalid email address",
-                  },
+                  pattern: emailPattern,
                 })}
                 placeholder="Email"
                 type="email"

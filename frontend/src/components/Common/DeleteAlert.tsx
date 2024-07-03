@@ -7,9 +7,9 @@ import {
   AlertDialogOverlay,
   Button,
 } from "@chakra-ui/react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import React from "react"
 import { useForm } from "react-hook-form"
-import { useMutation, useQueryClient } from "react-query"
 
 import { ItemsService, UsersService } from "../../client"
 import useCustomToast from "../../hooks/useCustomToast"
@@ -21,7 +21,7 @@ interface DeleteProps {
   onClose: () => void
 }
 
-const Delete: React.FC<DeleteProps> = ({ type, id, isOpen, onClose }) => {
+const Delete = ({ type, id, isOpen, onClose }: DeleteProps) => {
   const queryClient = useQueryClient()
   const showToast = useCustomToast()
   const cancelRef = React.useRef<HTMLButtonElement | null>(null)
@@ -40,7 +40,8 @@ const Delete: React.FC<DeleteProps> = ({ type, id, isOpen, onClose }) => {
     }
   }
 
-  const mutation = useMutation(deleteEntity, {
+  const mutation = useMutation({
+    mutationFn: deleteEntity,
     onSuccess: () => {
       showToast(
         "Success",
@@ -57,7 +58,9 @@ const Delete: React.FC<DeleteProps> = ({ type, id, isOpen, onClose }) => {
       )
     },
     onSettled: () => {
-      queryClient.invalidateQueries(type === "Item" ? "items" : "users")
+      queryClient.invalidateQueries({
+        queryKey: [type === "Item" ? "items" : "users"],
+      })
     },
   })
 

@@ -12,21 +12,20 @@ import {
   useColorModeValue,
   useDisclosure,
 } from "@chakra-ui/react"
-import type React from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import { FiLogOut, FiMenu } from "react-icons/fi"
-import { useQueryClient } from "react-query"
 
-import Logo from "../../assets/images/fastapi-logo.svg"
-import type { UserOut } from "../../client"
+import Logo from "/assets/images/fastapi-logo.svg"
+import type { UserPublic } from "../../client"
 import useAuth from "../../hooks/useAuth"
 import SidebarItems from "./SidebarItems"
 
-const Sidebar: React.FC = () => {
+const Sidebar = () => {
   const queryClient = useQueryClient()
-  const bgColor = useColorModeValue("ui.white", "ui.dark")
-  const textColor = useColorModeValue("ui.dark", "ui.white")
+  const bgColor = useColorModeValue("ui.light", "ui.dark")
+  const textColor = useColorModeValue("ui.dark", "ui.light")
   const secBgColor = useColorModeValue("ui.secondary", "ui.darkSlate")
-  const currentUser = queryClient.getQueryData<UserOut>("currentUser")
+  const currentUser = queryClient.getQueryData<UserPublic>(["currentUser"])
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { logout } = useAuth()
 

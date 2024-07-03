@@ -9,19 +9,19 @@ import {
   Input,
   useColorModeValue,
 } from "@chakra-ui/react"
-import type React from "react"
+import { useMutation } from "@tanstack/react-query"
 import { type SubmitHandler, useForm } from "react-hook-form"
-import { useMutation } from "react-query"
 
 import { type ApiError, type UpdatePassword, UsersService } from "../../client"
 import useCustomToast from "../../hooks/useCustomToast"
+import { confirmPasswordRules, passwordRules } from "../../utils"
 
 interface UpdatePasswordForm extends UpdatePassword {
   confirm_password: string
 }
 
-const ChangePassword: React.FC = () => {
-  const color = useColorModeValue("inherit", "ui.white")
+const ChangePassword = () => {
+  const color = useColorModeValue("inherit", "ui.light")
   const showToast = useCustomToast()
   const {
     register,
@@ -34,17 +34,15 @@ const ChangePassword: React.FC = () => {
     criteriaMode: "all",
   })
 
-  const UpdatePassword = async (data: UpdatePassword) => {
-    await UsersService.updatePasswordMe({ requestBody: data })
-  }
-
-  const mutation = useMutation(UpdatePassword, {
+  const mutation = useMutation({
+    mutationFn: (data: UpdatePassword) =>
+      UsersService.updatePasswordMe({ requestBody: data }),
     onSuccess: () => {
       showToast("Success!", "Password updated.", "success")
       reset()
     },
     onError: (err: ApiError) => {
-      const errDetail = err.body?.detail
+      const errDetail = (err.body as any)?.detail
       showToast("Something went wrong.", `${errDetail}`, "error")
     },
   })
@@ -55,14 +53,18 @@ const ChangePassword: React.FC = () => {
 
   return (
     <>
-      <Container maxW="full" as="form" onSubmit={handleSubmit(onSubmit)}>
+      <Container maxW="full">
         <Heading size="sm" py={4}>
           Change Password
         </Heading>
-        <Box w={{ sm: "full", md: "50%" }}>
+        <Box
+          w={{ sm: "full", md: "50%" }}
+          as="form"
+          onSubmit={handleSubmit(onSubmit)}
+        >
           <FormControl isRequired isInvalid={!!errors.current_password}>
             <FormLabel color={color} htmlFor="current_password">
-              Current password
+              Current Password
             </FormLabel>
             <Input
               id="current_password"
@@ -80,13 +82,7 @@ const ChangePassword: React.FC = () => {
             <FormLabel htmlFor="password">Set Password</FormLabel>
             <Input
               id="password"
-              {...register("new_password", {
-                required: "Password is required",
-                minLength: {
-                  value: 8,
-                  message: "Password must be at least 8 characters",
-                },
-              })}
+              {...register("new_password", passwordRules())}
               placeholder="Password"
               type="password"
             />
@@ -98,12 +94,7 @@ const ChangePassword: React.FC = () => {
             <FormLabel htmlFor="confirm_password">Confirm Password</FormLabel>
             <Input
               id="confirm_password"
-              {...register("confirm_password", {
-                required: "Please confirm your password",
-                validate: (value) =>
-                  value === getValues().new_password ||
-                  "The passwords do not match",
-              })}
+              {...register("confirm_password", confirmPasswordRules(getValues))}
               placeholder="Password"
               type="password"
             />

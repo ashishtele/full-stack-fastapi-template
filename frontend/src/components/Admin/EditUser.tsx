@@ -14,20 +14,20 @@ import {
   ModalHeader,
   ModalOverlay,
 } from "@chakra-ui/react"
-import type React from "react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { type SubmitHandler, useForm } from "react-hook-form"
-import { useMutation, useQueryClient } from "react-query"
 
 import {
   type ApiError,
-  type UserOut,
+  type UserPublic,
   type UserUpdate,
   UsersService,
 } from "../../client"
 import useCustomToast from "../../hooks/useCustomToast"
+import { emailPattern } from "../../utils"
 
 interface EditUserProps {
-  user: UserOut
+  user: UserPublic
   isOpen: boolean
   onClose: () => void
 }
@@ -36,7 +36,7 @@ interface UserUpdateForm extends UserUpdate {
   confirm_password: string
 }
 
-const EditUser: React.FC<EditUserProps> = ({ user, isOpen, onClose }) => {
+const EditUser = ({ user, isOpen, onClose }: EditUserProps) => {
   const queryClient = useQueryClient()
   const showToast = useCustomToast()
 
@@ -52,21 +52,19 @@ const EditUser: React.FC<EditUserProps> = ({ user, isOpen, onClose }) => {
     defaultValues: user,
   })
 
-  const updateUser = async (data: UserUpdateForm) => {
-    await UsersService.updateUser({ userId: user.id, requestBody: data })
-  }
-
-  const mutation = useMutation(updateUser, {
+  const mutation = useMutation({
+    mutationFn: (data: UserUpdateForm) =>
+      UsersService.updateUser({ userId: user.id, requestBody: data }),
     onSuccess: () => {
       showToast("Success!", "User updated successfully.", "success")
       onClose()
     },
     onError: (err: ApiError) => {
-      const errDetail = err.body?.detail
+      const errDetail = (err.body as any)?.detail
       showToast("Something went wrong.", `${errDetail}`, "error")
     },
     onSettled: () => {
-      queryClient.invalidateQueries("users")
+      queryClient.invalidateQueries({ queryKey: ["users"] })
     },
   })
 
@@ -101,10 +99,7 @@ const EditUser: React.FC<EditUserProps> = ({ user, isOpen, onClose }) => {
                 id="email"
                 {...register("email", {
                   required: "Email is required",
-                  pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i,
-                    message: "Invalid email address",
-                  },
+                  pattern: emailPattern,
                 })}
                 placeholder="Email"
                 type="email"

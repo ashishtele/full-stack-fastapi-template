@@ -7,10 +7,10 @@ import {
   TabPanels,
   Tabs,
 } from "@chakra-ui/react"
+import { useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
-import { useQueryClient } from "react-query"
 
-import type { UserOut } from "../../client"
+import type { UserPublic } from "../../client"
 import Appearance from "../../components/UserSettings/Appearance"
 import ChangePassword from "../../components/UserSettings/ChangePassword"
 import DeleteAccount from "../../components/UserSettings/DeleteAccount"
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_layout/settings")({
 
 function UserSettings() {
   const queryClient = useQueryClient()
-  const currentUser = queryClient.getQueryData<UserOut>("currentUser")
+  const currentUser = queryClient.getQueryData<UserPublic>(["currentUser"])
   const finalTabs = currentUser?.is_superuser
     ? tabsConfig.slice(0, 3)
     : tabsConfig
@@ -56,5 +56,3 @@ function UserSettings() {
     </Container>
   )
 }
-
-export default UserSettings

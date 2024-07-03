@@ -12,25 +12,24 @@ import {
   ModalHeader,
   ModalOverlay,
 } from "@chakra-ui/react"
-import type React from "react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { type SubmitHandler, useForm } from "react-hook-form"
 
-import { useMutation, useQueryClient } from "react-query"
 import {
   type ApiError,
-  type ItemOut,
+  type ItemPublic,
   type ItemUpdate,
   ItemsService,
 } from "../../client"
 import useCustomToast from "../../hooks/useCustomToast"
 
 interface EditItemProps {
-  item: ItemOut
+  item: ItemPublic
   isOpen: boolean
   onClose: () => void
 }
 
-const EditItem: React.FC<EditItemProps> = ({ item, isOpen, onClose }) => {
+const EditItem = ({ item, isOpen, onClose }: EditItemProps) => {
   const queryClient = useQueryClient()
   const showToast = useCustomToast()
   const {
@@ -44,21 +43,19 @@ const EditItem: React.FC<EditItemProps> = ({ item, isOpen, onClose }) => {
     defaultValues: item,
   })
 
-  const updateItem = async (data: ItemUpdate) => {
-    await ItemsService.updateItem({ id: item.id, requestBody: data })
-  }
-
-  const mutation = useMutation(updateItem, {
+  const mutation = useMutation({
+    mutationFn: (data: ItemUpdate) =>
+      ItemsService.updateItem({ id: item.id, requestBody: data }),
     onSuccess: () => {
       showToast("Success!", "Item updated successfully.", "success")
       onClose()
     },
     onError: (err: ApiError) => {
-      const errDetail = err.body?.detail
+      const errDetail = (err.body as any)?.detail
       showToast("Something went wrong.", `${errDetail}`, "error")
     },
     onSettled: () => {
-      queryClient.invalidateQueries("items")
+      queryClient.invalidateQueries({ queryKey: ["items"] })
     },
   })
 
